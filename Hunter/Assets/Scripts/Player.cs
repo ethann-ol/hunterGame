@@ -19,6 +19,8 @@ public class Player : MonoBehaviour
     private Vector3 velocity;
     [SerializeField]
     private float stamina = 100;
+    [SerializeField]
+    private bool canClimb;
 
     //Camera variable
     [SerializeField]
@@ -36,16 +38,27 @@ public class Player : MonoBehaviour
 
     //Weapon
     [SerializeField]
-    private GameObject[] weaponInStuff;
+    private List<GameObject> weaponInStuff;
     [SerializeField]
     private GameObject weaponEquipped;
+
+    //Climb
+    public Transform orientation;
+    public Rigidbody rb;
+    public LayerMask whatIsWall;
+    public float climbSpeed;
+    public float detectionLength;
+    public float sphereCastRadius;
+    private RaycastHit frontWallHit;
+    private float wallLookAngle;
+    private float maxWallLookAngle = 30;
 
     void Start()
     {
         Cursor.lockState = CursorLockMode.Locked;
         controller = GetComponent<CharacterController>();
         stamBarUI.fillAmount = stamina / 100;
-        weaponInStuff = new GameObject[2];
+        weaponInStuff = new List<GameObject>() { null, null};
     }
 
     void Update()
@@ -83,6 +96,17 @@ public class Player : MonoBehaviour
         }
         stamBarUI.fillAmount = stamina / 100;
 
+        //Climb
+        if (Input.GetKeyDown(KeyCode.R) && canClimb)
+        {
+            moveDirection += Vector3.up * speed;
+        }
+
+        if (Input.GetKeyDown(KeyCode.R) && !canClimb)
+        {
+            canClimb = false;
+        }
+
         //Add movement to gameObject
         moveDirection *= speed;
         controller.Move(moveDirection * Time.deltaTime);
@@ -100,8 +124,16 @@ public class Player : MonoBehaviour
             velocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
         }
 
-        velocity.y += gravity * Time.deltaTime;
+        //Climb
+        if (WallCheck() && Input.GetKey(KeyCode.Z) && wallLookAngle < maxWallLookAngle)
+        {
+            velocity.y = climbSpeed;
+        } else
+        {
+            velocity.y += gravity * Time.deltaTime;
+        }
 
+        //Add vertical movement
         controller.Move(velocity * Time.deltaTime);    
         
         //Shoot with weapon
@@ -116,6 +148,7 @@ public class Player : MonoBehaviour
             weaponEquipped.transform.position = transform.position;
             weaponEquipped.SetActive(true);
             weaponEquipped = null;
+            weaponInStuff[weaponInStuff.IndexOf(weaponEquipped)] = null;
         }
 
         //Select weapon
@@ -131,7 +164,14 @@ public class Player : MonoBehaviour
             weaponEquipped = weaponInStuff[1];
             textWeapon2.color = Color.red;
             textWeapon1.color = Color.black;
-        }
+        }        
+    }
+
+    private bool WallCheck()
+    {
+        bool frontWall = Physics.SphereCast(new Vector3(transform.position.x, transform.position.y - GetComponent<MeshRenderer>().bounds.size.y / 4, transform.position.z), sphereCastRadius, orientation.forward, out frontWallHit, detectionLength, whatIsWall);
+        wallLookAngle = Vector3.Angle(orientation.forward, -frontWallHit.normal);
+        return frontWall;
     }
 
     private void Shoot()
@@ -160,6 +200,14 @@ public class Player : MonoBehaviour
                 textWeapon2.text = other.name;
                 other.gameObject.SetActive(false);
             }
+        }
+    }
+
+    public void OnCollisionEnter(Collision collision)
+    {
+        if (collision.gameObject.name == "Escalade")
+        {
+            canClimb = true;
         }
     }
 }
