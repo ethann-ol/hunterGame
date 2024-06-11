@@ -30,10 +30,14 @@ public class Player : MonoBehaviour
     //UI variable
     [SerializeField]
     private Image stamBarUI;
+
     [SerializeField]
     private TextMeshProUGUI textWeapon1;
     [SerializeField]
     private TextMeshProUGUI textWeapon2;
+
+    [SerializeField]
+    private GameObject statUI;
 
     //Weapon
     [SerializeField]
@@ -46,6 +50,10 @@ public class Player : MonoBehaviour
     private TextMeshProUGUI textRangeWeapon;
     [SerializeField]
     private TextMeshProUGUI textRangeShoot;
+
+    //Stat
+    public int bonusStamina;
+    public int multiplierRange = 1, multiplierDamage = 1;
 
     //Climb
     public Transform orientation;
@@ -71,120 +79,131 @@ public class Player : MonoBehaviour
     }
 
     void Update()
-    {
-        //Camera rotation
-        Vector2 mouseInput = new Vector2(Input.GetAxisRaw("Mouse X"), Input.GetAxisRaw("Mouse Y")) * mouseSensitivity;
-        transform.rotation = Quaternion.Euler(transform.rotation.eulerAngles.x, transform.rotation.eulerAngles.y + mouseInput.x, transform.rotation.eulerAngles.z);
-        cameraTransform.rotation = Quaternion.Euler(cameraTransform.rotation.eulerAngles + new Vector3(-mouseInput.y, 0f, 0f));
-
-        //Player movement
-        float moveX = Input.GetAxis("Horizontal");
-        float moveZ = Input.GetAxis("Vertical");
-
-        Vector3 moveDirection = transform.right * moveX + transform.forward * moveZ;
-
-        //Crouch
-        if (Input.GetKey(KeyCode.LeftControl))
+    {               
+        if (Input.GetKeyDown(KeyCode.Tab))
         {
-            speed = 5;
-        }
-        else
-        {
-            speed = 10;
+            statUI.SetActive(!statUI.active);
+            Cursor.lockState = (statUI.active) ? CursorLockMode.None : CursorLockMode.Locked;
         }
 
-        //Sprint
-        if (Input.GetKey(KeyCode.LeftShift))
+        if (!statUI.active)
         {
-            speed = 20;
-            stamina -= 4 * Time.deltaTime;
-            isRunning = true;
-        } else
-        {
-            speed = 10;
-            isRunning = false;
-        }
+            //Camera rotation
+            Vector2 mouseInput = new Vector2(Input.GetAxisRaw("Mouse X"), Input.GetAxisRaw("Mouse Y")) * mouseSensitivity;
+            transform.rotation = Quaternion.Euler(transform.rotation.eulerAngles.x, transform.rotation.eulerAngles.y + mouseInput.x, transform.rotation.eulerAngles.z);
+            cameraTransform.rotation = Quaternion.Euler(cameraTransform.rotation.eulerAngles + new Vector3(-mouseInput.y, 0f, 0f));
 
-        //Add movement to gameObject
-        moveDirection *= speed;
-        controller.Move(moveDirection * Time.deltaTime);
+            //Player movement
+            float moveX = Input.GetAxis("Horizontal");
+            float moveZ = Input.GetAxis("Vertical");
 
-        //Jump
-        bool isGrounded = controller.isGrounded;
+            Vector3 moveDirection = transform.right * moveX + transform.forward * moveZ;
 
-        bool canJump = FloorCheck();
-        if (Input.GetKeyDown(KeyCode.Space) && canJump)
-        {
-            velocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
-        }
-
-        //Climb
-        if (WallCheck() && Input.GetKey(KeyCode.Z) && wallLookAngle < maxWallLookAngle)
-        {
-            velocity.y = climbSpeed;
-            stamina -= 6 * Time.deltaTime;
-            isClimbing = true;
-        } else
-        {
-            velocity.y += gravity * Time.deltaTime;
-            isClimbing = false;
-        }
-
-        //Regen stamina
-        if (!isRunning && !isClimbing && stamina < 100)
-        {
-            stamina += 5 * Time.deltaTime;
-        }
-
-        //Add vertical movement
-        stamBarUI.fillAmount = stamina / 100;
-        controller.Move(velocity * Time.deltaTime);    
-        
-        //Shoot with weapon
-        if (Input.GetMouseButtonDown(0) && weaponEquipped != null)
-        {
-            Shoot();
-        }
-
-        //Drop weapon
-        if (Input.GetKeyDown(KeyCode.A) && weaponEquipped != null)
-        {
-            if (weaponEquipOne)
+            //Crouch
+            if (Input.GetKey(KeyCode.LeftControl))
             {
-                textWeapon1.text = "";
+                speed = 5;
+            }
+            else
+            {
+                speed = 10;
+            }
+
+            //Sprint
+            if (Input.GetKey(KeyCode.LeftShift))
+            {
+                speed = 20;
+                stamina -= 4 * Time.deltaTime;
+                isRunning = true;
+            }
+            else
+            {
+                speed = 10;
+                isRunning = false;
+            }
+
+            //Add movement to gameObject
+            moveDirection *= speed;
+            controller.Move(moveDirection * Time.deltaTime);
+
+            //Jump
+            bool isGrounded = controller.isGrounded;
+
+            bool canJump = FloorCheck();
+            if (Input.GetKeyDown(KeyCode.Space) && canJump)
+            {
+                velocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
+            }
+
+            //Climb
+            if (WallCheck() && Input.GetKey(KeyCode.Z) && wallLookAngle < maxWallLookAngle)
+            {
+                velocity.y = climbSpeed;
+                stamina -= 6 * Time.deltaTime;
+                isClimbing = true;
+            }
+            else
+            {
+                velocity.y += gravity * Time.deltaTime;
+                isClimbing = false;
+            }
+
+            //Regen stamina
+            if (!isRunning && !isClimbing && stamina < 100)
+            {
+                stamina += 5 * Time.deltaTime;
+            }            
+
+            //Shoot with weapon
+            if (Input.GetMouseButtonDown(0) && weaponEquipped != null)
+            {
+                Shoot();
+            }
+
+            //Drop weapon
+            if (Input.GetKeyDown(KeyCode.A) && weaponEquipped != null)
+            {
+                if (weaponEquipOne)
+                {
+                    textWeapon1.text = "";
+                    weaponEquipOne = false;
+                    weaponEquipped.transform.position = transform.position;
+                    weaponEquipped.SetActive(true);
+                    weaponEquipped = null;
+                    weaponInStuff[0] = null;
+                }
+                else
+                {
+                    textWeapon2.text = "";
+                    weaponEquipped.transform.position = transform.position;
+                    weaponEquipped.SetActive(true);
+                    weaponEquipped = null;
+                    weaponInStuff[1] = null;
+                }
+            }
+
+            //Select weapon
+            if (Input.GetKeyDown(KeyCode.Alpha1) && weaponInStuff[0] != null)
+            {
+                weaponEquipped = weaponInStuff[0];
+                textWeapon1.color = Color.red;
+                textWeapon2.color = Color.black;
+                weaponEquipOne = true;
+                textRangeWeapon.text = "Weapon's range : " + (weaponEquipped.GetComponent<Weapon>().range * ((float)multiplierRange / 10)).ToString();
+            }
+
+            if (Input.GetKeyDown(KeyCode.Alpha2) && weaponInStuff[1] != null)
+            {
+                weaponEquipped = weaponInStuff[1];
+                textWeapon2.color = Color.red;
+                textWeapon1.color = Color.black;
                 weaponEquipOne = false;
-                weaponEquipped.transform.position = transform.position;
-                weaponEquipped.SetActive(true);
-                weaponEquipped = null;
-                weaponInStuff[0] = null;
-            } else
-            {
-                textWeapon2.text = "";
-                weaponEquipped.transform.position = transform.position;
-                weaponEquipped.SetActive(true);
-                weaponEquipped = null;
-                weaponInStuff[1] = null;
+                textRangeWeapon.text = "Weapon's range : " + ((float)weaponEquipped.GetComponent<Weapon>().range * (multiplierRange / 10)).ToString();
             }
         }
-
-        //Select weapon
-        if (Input.GetKeyDown(KeyCode.Alpha1) && weaponInStuff[0] != null)
-        {
-            weaponEquipped = weaponInStuff[0];
-            textWeapon1.color = Color.red;
-            textWeapon2.color = Color.black;
-            weaponEquipOne = true;
-            textRangeWeapon.text = "Weapon's range : " + weaponEquipped.GetComponent<Weapon>().range.ToString();
-        }
-
-        if (Input.GetKeyDown(KeyCode.Alpha2) && weaponInStuff[1] != null)
-        {
-            weaponEquipped = weaponInStuff[1];
-            textWeapon2.color = Color.red;
-            textWeapon1.color = Color.black;
-            weaponEquipOne = false;
-            textRangeWeapon.text = "Weapon's range : " + weaponEquipped.GetComponent<Weapon>().range.ToString();
-        }        
+        //Add vertical movement
+        stamBarUI.fillAmount = stamina / 100;
+        controller.Move(velocity * Time.deltaTime);
     }
 
     private bool WallCheck()
