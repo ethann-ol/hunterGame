@@ -19,8 +19,7 @@ public class Player : MonoBehaviour
     private Vector3 velocity;
     [SerializeField]
     private float stamina = 100;
-    [SerializeField]
-    private bool canClimb;
+    bool isRunning, isClimbing;
 
     //Camera variable
     [SerializeField]
@@ -41,6 +40,12 @@ public class Player : MonoBehaviour
     private List<GameObject> weaponInStuff;
     [SerializeField]
     private GameObject weaponEquipped;
+    [SerializeField]
+    private bool weaponEquipOne;
+    [SerializeField]
+    private TextMeshProUGUI textRangeWeapon;
+    [SerializeField]
+    private TextMeshProUGUI textRangeShoot;
 
     //Climb
     public Transform orientation;
@@ -52,6 +57,10 @@ public class Player : MonoBehaviour
     private RaycastHit frontWallHit;
     private float wallLookAngle;
     private float maxWallLookAngle = 30;
+
+    //SolDetection
+    public LayerMask whatIsFloor;
+    private RaycastHit floorHit;
 
     void Start()
     {
@@ -88,23 +97,12 @@ public class Player : MonoBehaviour
         if (Input.GetKey(KeyCode.LeftShift))
         {
             speed = 20;
-            stamina -= 10 * Time.deltaTime;
-        } else if (stamina < 100)
+            stamina -= 4 * Time.deltaTime;
+            isRunning = true;
+        } else
         {
             speed = 10;
-            stamina += 10 * Time.deltaTime;
-        }
-        stamBarUI.fillAmount = stamina / 100;
-
-        //Climb
-        if (Input.GetKeyDown(KeyCode.R) && canClimb)
-        {
-            moveDirection += Vector3.up * speed;
-        }
-
-        if (Input.GetKeyDown(KeyCode.R) && !canClimb)
-        {
-            canClimb = false;
+            isRunning = false;
         }
 
         //Add movement to gameObject
@@ -114,12 +112,8 @@ public class Player : MonoBehaviour
         //Jump
         bool isGrounded = controller.isGrounded;
 
-        if (isGrounded && velocity.y < 0)
-        {
-            velocity.y = -2f;
-        }
-
-        if (Input.GetKeyDown(KeyCode.Space))
+        bool canJump = FloorCheck();
+        if (Input.GetKeyDown(KeyCode.Space) && canJump)
         {
             velocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
         }
@@ -128,12 +122,22 @@ public class Player : MonoBehaviour
         if (WallCheck() && Input.GetKey(KeyCode.Z) && wallLookAngle < maxWallLookAngle)
         {
             velocity.y = climbSpeed;
+            stamina -= 6 * Time.deltaTime;
+            isClimbing = true;
         } else
         {
             velocity.y += gravity * Time.deltaTime;
+            isClimbing = false;
+        }
+
+        //Regen stamina
+        if (!isRunning && !isClimbing && stamina < 100)
+        {
+            stamina += 5 * Time.deltaTime;
         }
 
         //Add vertical movement
+        stamBarUI.fillAmount = stamina / 100;
         controller.Move(velocity * Time.deltaTime);    
         
         //Shoot with weapon
@@ -145,10 +149,22 @@ public class Player : MonoBehaviour
         //Drop weapon
         if (Input.GetKeyDown(KeyCode.A) && weaponEquipped != null)
         {
-            weaponEquipped.transform.position = transform.position;
-            weaponEquipped.SetActive(true);
-            weaponEquipped = null;
-            weaponInStuff[weaponInStuff.IndexOf(weaponEquipped)] = null;
+            if (weaponEquipOne)
+            {
+                textWeapon1.text = "";
+                weaponEquipOne = false;
+                weaponEquipped.transform.position = transform.position;
+                weaponEquipped.SetActive(true);
+                weaponEquipped = null;
+                weaponInStuff[0] = null;
+            } else
+            {
+                textWeapon2.text = "";
+                weaponEquipped.transform.position = transform.position;
+                weaponEquipped.SetActive(true);
+                weaponEquipped = null;
+                weaponInStuff[1] = null;
+            }
         }
 
         //Select weapon
@@ -157,6 +173,8 @@ public class Player : MonoBehaviour
             weaponEquipped = weaponInStuff[0];
             textWeapon1.color = Color.red;
             textWeapon2.color = Color.black;
+            weaponEquipOne = true;
+            textRangeWeapon.text = "Weapon's range : " + weaponEquipped.GetComponent<Weapon>().range.ToString();
         }
 
         if (Input.GetKeyDown(KeyCode.Alpha2) && weaponInStuff[1] != null)
@@ -164,6 +182,8 @@ public class Player : MonoBehaviour
             weaponEquipped = weaponInStuff[1];
             textWeapon2.color = Color.red;
             textWeapon1.color = Color.black;
+            weaponEquipOne = false;
+            textRangeWeapon.text = "Weapon's range : " + weaponEquipped.GetComponent<Weapon>().range.ToString();
         }        
     }
 
@@ -174,20 +194,26 @@ public class Player : MonoBehaviour
         return frontWall;
     }
 
+    private bool FloorCheck()
+    {
+        bool floor = Physics.SphereCast(new Vector3(transform.position.x, transform.position.y, transform.position.z), sphereCastRadius, -orientation.up, out floorHit, detectionLength, whatIsFloor);
+        return floor;
+    }
+
     private void Shoot()
     {
         Ray ray = new Ray(cameraTransform.position, cameraTransform.forward);
         RaycastHit hitInfo;
-        if (Physics.Raycast(ray, out hitInfo, weaponEquipped.GetComponent<Weapon>().range))
+        if (Physics.Raycast(ray, out hitInfo))
         {
             Debug.DrawLine(ray.origin, hitInfo.point, Color.red, 2f);
-            Debug.Log("Damage : " + weaponEquipped.GetComponent<Weapon>().damage);
+            textRangeShoot.text = "Shoot distance : " + hitInfo.distance.ToString();
         }
     }
 
     private void OnTriggerStay(Collider other)
     {
-        if (other.transform.tag == "Weapon" && Input.GetKeyDown(KeyCode.E))
+        if (other.transform.tag == "Weapon" && Input.GetKey(KeyCode.E))
         {
             if (weaponInStuff[0] == null)
             {
@@ -205,9 +231,5 @@ public class Player : MonoBehaviour
 
     public void OnCollisionEnter(Collision collision)
     {
-        if (collision.gameObject.name == "Escalade")
-        {
-            canClimb = true;
-        }
     }
 }
