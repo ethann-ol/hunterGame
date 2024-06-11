@@ -53,7 +53,7 @@ public class Player : MonoBehaviour
 
     //Stat
     public int bonusStamina;
-    public int multiplierRange = 1, multiplierDamage = 1;
+    public int multiplierRange = 10, multiplierDamage = 10;
 
     //Climb
     public Transform orientation;
