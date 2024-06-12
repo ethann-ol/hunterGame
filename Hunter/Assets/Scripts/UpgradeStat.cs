@@ -11,6 +11,8 @@ public class UpgradeStat : MonoBehaviour
     private Player scriptPlayer;
 
     [SerializeField]
+    private TextMeshProUGUI textClimbSpeedPoint;
+    [SerializeField]
     private TextMeshProUGUI textStamPoint;
     [SerializeField]
     private TextMeshProUGUI textRangePoint;
@@ -21,22 +23,29 @@ public class UpgradeStat : MonoBehaviour
     {
         scriptPlayer = player.GetComponent<Player>();
     }
+    
+    public void AddClimbSpeed()
+    {
+        scriptPlayer.bonusClimbSpeed += 1;
+        textClimbSpeedPoint.text = $"({scriptPlayer.bonusClimbSpeed})";
+    }
 
     public void AddStamina()
     {
         scriptPlayer.bonusStamina += 1;
-        textStamPoint.text = $"You have {scriptPlayer.bonusStamina - 10} point.";
+        textStamPoint.text = $"({scriptPlayer.bonusStamina})";
     }
 
     public void AddRange()
     {
         scriptPlayer.multiplierRange +=1;
-        textRangePoint.text = $"You have {scriptPlayer.multiplierRange - 10} point.";
+        textRangePoint.text = $"({scriptPlayer.multiplierRange})";
     }
 
     public void AddDamage()
     {
         scriptPlayer.multiplierDamage += 1;
-        textDamagePoint.text = $"You have {scriptPlayer.multiplierDamage - 10} point.";
+        textDamagePoint.text = $"({scriptPlayer.multiplierDamage})";
     }
+
 }

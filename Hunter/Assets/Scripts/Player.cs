@@ -58,7 +58,7 @@ public class Player : MonoBehaviour
     private TextMeshProUGUI textRangeShoot;
 
     //Stat
-    public int bonusStamina;
+    public int bonusStamina = 10, bonusClimbSpeed = 10;
     public int multiplierRange = 10, multiplierDamage = 10;
 
     //Climb
