@@ -48,6 +48,9 @@ public class EnemyAi : MonoBehaviour
 
     private void Patroling()
     {
+        anim.SetFloat("speed", 1);
+        anim.SetTrigger("ChangeState");
+        agent.speed = 5.0f;
         if (!walkPointSet) SearchWalkPoint();
 
         if (walkPointSet)
@@ -60,7 +63,6 @@ public class EnemyAi : MonoBehaviour
     }
     private void SearchWalkPoint()
     {
-        anim.SetFloat("speed", 2);
         float randomZ = Random.Range(-walkPointRange, walkPointRange);
         float randomX = Random.Range(-walkPointRange, walkPointRange);
 
@@ -72,17 +74,21 @@ public class EnemyAi : MonoBehaviour
 
     private void ChasePlayer()
     {
-        anim.SetFloat("speed", 2);
+        anim.SetFloat("speed", 3);
+        anim.SetTrigger("ChangeState");
+        agent.speed = 12.0f;
         agent.SetDestination(player.position);
     }
 
     private void AttackPlayer()
     {
-        anim.SetFloat("speed", 0);
+        anim.SetFloat("speed", -1);
+        anim.SetTrigger("ChangeState");
+        agent.speed = 0.0f;
 
         agent.SetDestination(transform.position);
 
-        transform.LookAt(player);
+        //transform.LookAt(player);
 
         /*if (!alreadyAttacked)
         {

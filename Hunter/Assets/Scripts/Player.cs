@@ -110,7 +110,7 @@ public class Player : MonoBehaviour
             }
 
             //Sprint
-            if (Input.GetKey(KeyCode.LeftShift))
+            if (Input.GetKey(KeyCode.LeftShift) && (moveDirection.x != 0 || moveDirection.z != 0))
             {
                 speed = 20;
                 stamina -= 4 * Time.deltaTime;
@@ -142,7 +142,7 @@ public class Player : MonoBehaviour
                 stamina -= 6 * Time.deltaTime;
                 isClimbing = true;
             }
-            else
+            else if (velocity.y > -15)
             {
                 velocity.y += gravity * Time.deltaTime;
                 isClimbing = false;
