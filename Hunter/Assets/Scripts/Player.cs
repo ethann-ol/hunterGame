@@ -25,6 +25,14 @@ public class Player : MonoBehaviour
     [SerializeField]
     private float health = 100;
 
+    //Experience
+    public float experience = 0, maxExperience = 100;
+    public int pointAvailable = 0;
+    [SerializeField]
+    private Image experienceBarUI;
+    [SerializeField]
+    private TextMeshProUGUI textPointUI;
+
     //Camera variable
     [SerializeField]
     private float mouseSensitivity = 3f;
@@ -58,8 +66,8 @@ public class Player : MonoBehaviour
     private TextMeshProUGUI textRangeShoot;
 
     //Stat
-    public int bonusStamina = 10, bonusClimbSpeed = 10;
-    public int multiplierRange = 10, multiplierDamage = 10;
+    public float bonusStamina = 1, bonusClimbSpeed = 1;
+    public float multiplierRange = 1, multiplierDamage = 1;
 
     //Climb
     public Transform orientation;
@@ -85,7 +93,12 @@ public class Player : MonoBehaviour
     }
 
     void Update()
-    {               
+    {   
+        if (health <= 0)
+        {
+            Debug.Log("Mort");
+        }
+
         if (Input.GetKeyDown(KeyCode.Tab))
         {
             statUI.SetActive(!statUI.active);
@@ -144,7 +157,7 @@ public class Player : MonoBehaviour
             //Climb
             if (WallCheck() && Input.GetKey(KeyCode.Z) && wallLookAngle < maxWallLookAngle)
             {
-                velocity.y = climbSpeed;
+                velocity.y = climbSpeed * bonusClimbSpeed;
                 stamina -= 6 * Time.deltaTime;
                 isClimbing = true;
             }
@@ -195,7 +208,7 @@ public class Player : MonoBehaviour
                 textWeapon1.color = Color.red;
                 textWeapon2.color = Color.black;
                 weaponEquipOne = true;
-                textRangeWeapon.text = "Weapon's range : " + (weaponEquipped.GetComponent<Weapon>().range * ((float)multiplierRange / 10)).ToString();
+                textRangeWeapon.text = "Weapon's range : " + (weaponEquipped.GetComponent<Weapon>().range * multiplierRange).ToString();
             }
 
             if (Input.GetKeyDown(KeyCode.Alpha2) && weaponInStuff[1] != null)
@@ -204,7 +217,7 @@ public class Player : MonoBehaviour
                 textWeapon2.color = Color.red;
                 textWeapon1.color = Color.black;
                 weaponEquipOne = false;
-                textRangeWeapon.text = "Weapon's range : " + ((float)weaponEquipped.GetComponent<Weapon>().range * (multiplierRange / 10)).ToString();
+                textRangeWeapon.text = "Weapon's range : " + ((float)weaponEquipped.GetComponent<Weapon>().range * multiplierRange ).ToString();
             }
         }
         //Add vertical movement
@@ -215,6 +228,20 @@ public class Player : MonoBehaviour
     public void TakeDamage(float dmg){
         health -= dmg;
         healthBarUI.fillAmount = health / 100;
+    }
+
+    public void UpdateExperience(float xpToAdd)
+    {
+        experience += xpToAdd;
+        if (experience >= maxExperience)
+        {
+            experience -= maxExperience;
+            maxExperience *= 1.2f;
+            pointAvailable++;
+            experienceBarUI.fillAmount = experience / maxExperience;
+            textPointUI.text = $"Point disponible : {pointAvailable}";
+            UpdateExperience(0);
+        }
     }
 
     private bool WallCheck()
@@ -236,6 +263,11 @@ public class Player : MonoBehaviour
         RaycastHit hitInfo;
         if (Physics.Raycast(ray, out hitInfo))
         {
+            if (hitInfo.distance < (float)weaponEquipped.GetComponent<Weapon>().range * multiplierRange && hitInfo.collider.tag == "Enemy")
+            {
+                EnemyAi enemyAi = hitInfo.collider.gameObject.GetComponent<EnemyAi>();
+                enemyAi.TakeDamage(weaponEquipped.GetComponent<Weapon>().damage * multiplierDamage);
+            }
             Debug.DrawLine(ray.origin, hitInfo.point, Color.red, 2f);
             textRangeShoot.text = "Shoot distance : " + hitInfo.distance.ToString();
         }

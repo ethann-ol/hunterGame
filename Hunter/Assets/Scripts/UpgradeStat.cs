@@ -26,26 +26,48 @@ public class UpgradeStat : MonoBehaviour
     
     public void AddClimbSpeed()
     {
-        scriptPlayer.bonusClimbSpeed += 1;
-        textClimbSpeedPoint.text = $"({scriptPlayer.bonusClimbSpeed})";
+        Upgrade("Climb");
     }
 
     public void AddStamina()
     {
-        scriptPlayer.bonusStamina += 1;
-        textStamPoint.text = $"({scriptPlayer.bonusStamina})";
+        Upgrade("Stamina");
     }
 
     public void AddRange()
     {
-        scriptPlayer.multiplierRange +=1;
-        textRangePoint.text = $"({scriptPlayer.multiplierRange})";
+        Upgrade("Range");
     }
 
     public void AddDamage()
     {
-        scriptPlayer.multiplierDamage += 1;
-        textDamagePoint.text = $"({scriptPlayer.multiplierDamage})";
+        Upgrade("Damage");
     }
 
+    private void Upgrade(string stat)
+    {
+        if (scriptPlayer.pointAvailable > 0)
+        {
+            switch (stat)
+            {
+                case "Climb":
+                    scriptPlayer.bonusClimbSpeed += .1f;
+                    textClimbSpeedPoint.text = $"({scriptPlayer.bonusClimbSpeed})";
+                    break;
+                case "Stamina":
+                    scriptPlayer.bonusStamina += .1f;
+                    textStamPoint.text = $"({scriptPlayer.bonusStamina})";
+                    break;
+                case "Range":
+                    scriptPlayer.multiplierRange += .1f;
+                    textRangePoint.text = $"({scriptPlayer.multiplierRange})";
+                    break;
+                case "Damage":
+                    scriptPlayer.multiplierDamage += .1f;
+                    textDamagePoint.text = $"({scriptPlayer.multiplierDamage})";
+                    break;
+            }
+            scriptPlayer.pointAvailable--;
+        }
+    }
 }
