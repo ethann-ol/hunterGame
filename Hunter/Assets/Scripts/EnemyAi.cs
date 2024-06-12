@@ -27,10 +27,13 @@ public class EnemyAi : MonoBehaviour
     public float sightRange, attackRange;
     public bool playerInSightRange, playerInAttackRange;
 
+    public Animator anim;
+
     void Awake()
     {
         player = GameObject.Find("Player").transform;
         agent = GetComponent<NavMeshAgent>();
+        anim = GetComponent<Animator>();
     }
 
     void Update()
@@ -57,6 +60,7 @@ public class EnemyAi : MonoBehaviour
     }
     private void SearchWalkPoint()
     {
+        anim.SetFloat("speed", 2);
         float randomZ = Random.Range(-walkPointRange, walkPointRange);
         float randomX = Random.Range(-walkPointRange, walkPointRange);
 
@@ -68,22 +72,25 @@ public class EnemyAi : MonoBehaviour
 
     private void ChasePlayer()
     {
+        anim.SetFloat("speed", 2);
         agent.SetDestination(player.position);
     }
 
     private void AttackPlayer()
     {
+        anim.SetFloat("speed", 0);
+
         agent.SetDestination(transform.position);
 
         transform.LookAt(player);
 
-        if (!alreadyAttacked)
+        /*if (!alreadyAttacked)
         {
             //Attack 
 
             alreadyAttacked = true;
             Invoke(nameof(ResetAttack), timeBetweenAttacks);
-        }
+        }*/
     }
     private void ResetAttack()
     {

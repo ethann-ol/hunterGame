@@ -215,7 +215,7 @@ public class Player : MonoBehaviour
 
     private bool FloorCheck()
     {
-        bool floor = Physics.SphereCast(new Vector3(transform.position.x, transform.position.y, transform.position.z), sphereCastRadius, -orientation.up, out floorHit, detectionLength, whatIsFloor);
+        bool floor = Physics.SphereCast(transform.position, sphereCastRadius, -orientation.up, out floorHit, detectionLength, whatIsFloor);
         return floor;
     }
 
