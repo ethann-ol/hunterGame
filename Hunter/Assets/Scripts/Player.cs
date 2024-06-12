@@ -21,6 +21,10 @@ public class Player : MonoBehaviour
     private float stamina = 100;
     bool isRunning, isClimbing;
 
+    //Health
+    [SerializeField]
+    private float health = 100;
+
     //Camera variable
     [SerializeField]
     private float mouseSensitivity = 3f;
@@ -30,6 +34,8 @@ public class Player : MonoBehaviour
     //UI variable
     [SerializeField]
     private Image stamBarUI;
+    [SerializeField]
+    private Image healthBarUI;
 
     [SerializeField]
     private TextMeshProUGUI textWeapon1;
@@ -206,6 +212,11 @@ public class Player : MonoBehaviour
         controller.Move(velocity * Time.deltaTime);
     }
 
+    public void TakeDamage(float dmg){
+        health -= dmg;
+        healthBarUI.fillAmount = health / 100;
+    }
+
     private bool WallCheck()
     {
         bool frontWall = Physics.SphereCast(new Vector3(transform.position.x, transform.position.y - GetComponent<MeshRenderer>().bounds.size.y / 4, transform.position.z), sphereCastRadius, orientation.forward, out frontWallHit, detectionLength, whatIsWall);
@@ -246,9 +257,5 @@ public class Player : MonoBehaviour
                 other.gameObject.SetActive(false);
             }
         }
-    }
-
-    public void OnCollisionEnter(Collision collision)
-    {
     }
 }

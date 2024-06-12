@@ -48,6 +48,7 @@ public class EnemyAi : MonoBehaviour
 
     private void Patroling()
     {
+        anim.SetBool("attack", false);
         anim.SetFloat("speed", 1);
         anim.SetTrigger("ChangeState");
         agent.speed = 5.0f;
@@ -74,6 +75,7 @@ public class EnemyAi : MonoBehaviour
 
     private void ChasePlayer()
     {
+        anim.SetBool("attack", false);
         anim.SetFloat("speed", 3);
         anim.SetTrigger("ChangeState");
         agent.speed = 12.0f;
@@ -82,6 +84,7 @@ public class EnemyAi : MonoBehaviour
 
     private void AttackPlayer()
     {
+        anim.SetBool("attack", true);
         anim.SetFloat("speed", -1);
         anim.SetTrigger("ChangeState");
         agent.speed = 0.0f;
@@ -90,13 +93,12 @@ public class EnemyAi : MonoBehaviour
 
         //transform.LookAt(player);
 
-        /*if (!alreadyAttacked)
+        if (!alreadyAttacked)
         {
-            //Attack 
-
             alreadyAttacked = true;
+            player.GetComponent<Player>().TakeDamage(5);
             Invoke(nameof(ResetAttack), timeBetweenAttacks);
-        }*/
+        }
     }
     private void ResetAttack()
     {
