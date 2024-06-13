@@ -49,14 +49,16 @@ public class Player : MonoBehaviour
     private Image healthBarUI;
 
     [SerializeField]
-    private TextMeshProUGUI textWeapon1;
+    private Image imageWeapon1;
     [SerializeField]
-    private TextMeshProUGUI textWeapon2;
+    private Image imageWeapon2;
 
     [SerializeField]
     private GameObject statUI;
 
     //Weapon
+    [SerializeField]
+    private Transform offsetWeapon;
     [SerializeField]
     private List<GameObject> weaponInStuff;
     [SerializeField]
@@ -194,9 +196,10 @@ public class Player : MonoBehaviour
             //Drop weapon
             if (Input.GetKeyDown(KeyCode.A) && weaponEquipped != null)
             {
+                weaponEquipped.GetComponent<Weapon>().isEquiped = false;
                 if (weaponEquipOne)
                 {
-                    textWeapon1.text = "";
+                    imageWeapon1.sprite = weaponEquipped.GetComponent<Weapon>().sprite;
                     weaponEquipOne = false;
                     weaponEquipped.transform.position = transform.position;
                     weaponEquipped.SetActive(true);
@@ -205,7 +208,7 @@ public class Player : MonoBehaviour
                 }
                 else
                 {
-                    textWeapon2.text = "";
+                    imageWeapon2.sprite = weaponEquipped.GetComponent<Weapon>().sprite;
                     weaponEquipped.transform.position = transform.position;
                     weaponEquipped.SetActive(true);
                     weaponEquipped = null;
@@ -213,23 +216,54 @@ public class Player : MonoBehaviour
                 }
             }
 
+            if (Input.GetMouseButton(1) && weaponEquipped != null)
+            {
+                switch (weaponEquipped.name)
+                {
+                    case "pistoLaser":
+                        cameraTransform.gameObject.GetComponent<Camera>().fieldOfView = 60;
+                        break;
+                    case "snipeLaser":
+                        cameraTransform.gameObject.GetComponent<Camera>().fieldOfView = 30;
+                        break;
+                }
+            }
+            else
+            {
+                cameraTransform.gameObject.GetComponent<Camera>().fieldOfView = 90;
+            }
+
             //Select weapon
             if (Input.GetKeyDown(KeyCode.Alpha1) && weaponInStuff[0] != null)
             {
+                if (weaponEquipped != null)
+                {
+                    weaponEquipped.SetActive(false);
+                }
                 weaponEquipped = weaponInStuff[0];
-                textWeapon1.color = Color.red;
-                textWeapon2.color = Color.black;
+                weaponEquipped.SetActive(true);
+                weaponEquipped.transform.SetParent(offsetWeapon, false); 
+                weaponEquipped.transform.position = offsetWeapon.position;
+                imageWeapon1.color = Color.red;
+                imageWeapon2.color = Color.white;
                 weaponEquipOne = true;
                 textRangeWeapon.text = "Weapon's range : " + (weaponEquipped.GetComponent<Weapon>().range * multiplierRange).ToString();
             }
 
             if (Input.GetKeyDown(KeyCode.Alpha2) && weaponInStuff[1] != null)
             {
+                if (weaponEquipped != null)
+                {
+                    weaponEquipped.SetActive(false);
+                }
                 weaponEquipped = weaponInStuff[1];
-                textWeapon2.color = Color.red;
-                textWeapon1.color = Color.black;
-                weaponEquipOne = false;
-                textRangeWeapon.text = "Weapon's range : " + ((float)weaponEquipped.GetComponent<Weapon>().range * multiplierRange ).ToString();
+                weaponEquipped.SetActive(true);
+                weaponEquipped.transform.SetParent(offsetWeapon, false);
+                weaponEquipped.transform.position = offsetWeapon.position;
+                imageWeapon2.color = Color.red;
+                imageWeapon1.color = Color.white;
+                weaponEquipOne = true;
+                textRangeWeapon.text = "Weapon's range : " + (weaponEquipped.GetComponent<Weapon>().range * multiplierRange).ToString();
             }
         }
         //Add vertical movement
@@ -341,6 +375,7 @@ public class Player : MonoBehaviour
             if (hitInfo.distance < (float)weaponEquipped.GetComponent<Weapon>().range * multiplierRange && hitInfo.collider.tag == "Enemy")
             {
                 EnemyAi enemyAi = hitInfo.collider.gameObject.GetComponent<EnemyAi>();
+                weaponEquipped.GetComponent<Weapon>().MakeExplosion(hitInfo.point);
                 enemyAi.TakeDamage(weaponEquipped.GetComponent<Weapon>().damage * multiplierDamage);
             }
             Debug.DrawLine(ray.origin, hitInfo.point, Color.red, 2f);
@@ -352,16 +387,19 @@ public class Player : MonoBehaviour
     {
         if (other.transform.tag == "Weapon" && Input.GetKey(KeyCode.E))
         {
-            if (weaponInStuff[0] == null)
+            if (!other.gameObject.GetComponent<Weapon>().isEquiped)
             {
-                weaponInStuff[0] = other.gameObject;
-                textWeapon1.text = other.name;
-                other.gameObject.SetActive(false);
-            } else if (weaponInStuff[1] == null)
-            {
-                weaponInStuff[1] = other.gameObject;
-                textWeapon2.text = other.name;
-                other.gameObject.SetActive(false);
+                other.gameObject.GetComponent<Weapon>().isEquiped = true;
+                if (weaponInStuff[0] == null)
+                {
+                    weaponInStuff[0] = other.gameObject;
+                    imageWeapon1.sprite = other.gameObject.GetComponent<Weapon>().sprite;
+                }
+                else if (weaponInStuff[1] == null)
+                {
+                    weaponInStuff[1] = other.gameObject;
+                    imageWeapon2.sprite = other.gameObject.GetComponent<Weapon>().sprite;
+                }
             }
         }
     }
