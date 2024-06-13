@@ -1,4 +1,5 @@
 
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
@@ -24,6 +25,8 @@ public class Player : MonoBehaviour
     //Health
     [SerializeField]
     private float health = 100;
+    [SerializeField]
+    private bool canTakeDamage = true;
 
     //Experience
     public float experience = 0, maxExperience = 100;
@@ -84,16 +87,25 @@ public class Player : MonoBehaviour
     public LayerMask whatIsFloor;
     private RaycastHit floorHit;
 
+    //CheatCode
+    [SerializeField]
+    private List<Tuple<Dictionary<KeyCode, bool>, string>> cheatCode = new List<Tuple<Dictionary<KeyCode, bool>, string>>();
+
     void Start()
     {
         Cursor.lockState = CursorLockMode.Locked;
         controller = GetComponent<CharacterController>();
         stamBarUI.fillAmount = stamina / 100;
         weaponInStuff = new List<GameObject>() { null, null};
+
+        Tuple<Dictionary<KeyCode, bool>, string> cheatOne = new Tuple<Dictionary<KeyCode, bool>, string>(new Dictionary<KeyCode, bool> { {KeyCode.I, false }, {KeyCode.N, false }, {KeyCode.V, false}, {KeyCode.C, false}, { KeyCode.B, false }, { KeyCode.L, false }, { KeyCode.E, false } }, "Invincible");
+        cheatCode.Add(cheatOne);
     }
 
     void Update()
-    {   
+    {
+        CheckCheat();
+
         if (health <= 0)
         {
             Debug.Log("Mort");
@@ -225,9 +237,72 @@ public class Player : MonoBehaviour
         controller.Move(velocity * Time.deltaTime);
     }
 
+    private void CheckCheat()
+    {
+        foreach (KeyCode key in System.Enum.GetValues(typeof(KeyCode)))
+        {
+            if (Input.GetKeyDown(key))
+            {
+                foreach (Tuple<Dictionary<KeyCode, bool>, string> c in cheatCode)
+                {
+                    int index = 0;
+                    foreach(KeyValuePair<KeyCode, bool> keyValuePair in c.Item1)
+                    {
+                        index++;
+                        if (index == c.Item1.Count)
+                        {
+                            index = 0;
+                            ApplyCheat(c.Item2);
+                            ResetCheat(c);
+                            break;
+                        }
+
+                        if (keyValuePair.Value)
+                        {
+                            continue;
+                        }
+                        else if (keyValuePair.Key == key)
+                        {
+                            c.Item1[key] = true;
+                            break;
+                        }
+                        else if (keyValuePair.Key != key)
+                        {
+                            ResetCheat(c);
+                            break;
+                        }                        
+                    }
+                }
+            }
+        }        
+    }
+
+    private void ApplyCheat(string cheat)
+    {
+        switch (cheat)
+        {
+            case "Invincible":
+                Debug.Log(cheat);
+                canTakeDamage = !canTakeDamage;
+                break;
+        }
+    }
+
+    private void ResetCheat(Tuple<Dictionary<KeyCode, bool>, string> c)
+    {
+        List<KeyCode> keys = new List<KeyCode>(c.Item1.Keys);
+        foreach (KeyCode key in keys)
+        {
+            c.Item1[key] = false;
+        }
+    }
+
     public void TakeDamage(float dmg){
-        health -= dmg;
-        healthBarUI.fillAmount = health / 100;
+        if (canTakeDamage)
+        {
+            health -= dmg;
+            healthBarUI.fillAmount = health / 100;
+        }
     }
 
     public void UpdateExperience(float xpToAdd)
