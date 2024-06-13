@@ -69,6 +69,8 @@ public class Player : MonoBehaviour
     private TextMeshProUGUI textRangeWeapon;
     [SerializeField]
     private TextMeshProUGUI textRangeShoot;
+    [SerializeField]
+    private TextMeshProUGUI textDamageShoot;
 
     //Stat
     public float bonusStamina = 1, bonusClimbSpeed = 1;
@@ -188,7 +190,7 @@ public class Player : MonoBehaviour
             }            
 
             //Shoot with weapon
-            if (Input.GetMouseButtonDown(0) && weaponEquipped != null)
+            if (Input.GetMouseButton(0) && weaponEquipped != null)
             {
                 Shoot();
             }
@@ -248,6 +250,7 @@ public class Player : MonoBehaviour
                 imageWeapon2.color = Color.white;
                 weaponEquipOne = true;
                 textRangeWeapon.text = "Weapon's range : " + (weaponEquipped.GetComponent<Weapon>().range * multiplierRange).ToString();
+                textDamageShoot.text = "Weapon's damage : " + (weaponEquipped.GetComponent<Weapon>().damage * multiplierDamage).ToString();
             }
 
             if (Input.GetKeyDown(KeyCode.Alpha2) && weaponInStuff[1] != null)
@@ -264,6 +267,7 @@ public class Player : MonoBehaviour
                 imageWeapon1.color = Color.white;
                 weaponEquipOne = true;
                 textRangeWeapon.text = "Weapon's range : " + (weaponEquipped.GetComponent<Weapon>().range * multiplierRange).ToString();
+                textDamageShoot.text = "Weapon's damage : " + (weaponEquipped.GetComponent<Weapon>().damage * multiplierDamage).ToString();
             }
         }
         //Add vertical movement
@@ -375,8 +379,7 @@ public class Player : MonoBehaviour
             if (hitInfo.distance < (float)weaponEquipped.GetComponent<Weapon>().range * multiplierRange && hitInfo.collider.tag == "Enemy")
             {
                 EnemyAi enemyAi = hitInfo.collider.gameObject.GetComponent<EnemyAi>();
-                weaponEquipped.GetComponent<Weapon>().MakeExplosion(hitInfo.point);
-                enemyAi.TakeDamage(weaponEquipped.GetComponent<Weapon>().damage * multiplierDamage);
+                weaponEquipped.GetComponent<Weapon>().Shoot(enemyAi, hitInfo.point, multiplierDamage);
             }
             Debug.DrawLine(ray.origin, hitInfo.point, Color.red, 2f);
             textRangeShoot.text = "Shoot distance : " + hitInfo.distance.ToString();
@@ -393,11 +396,13 @@ public class Player : MonoBehaviour
                 if (weaponInStuff[0] == null)
                 {
                     weaponInStuff[0] = other.gameObject;
+                    other.gameObject.SetActive(false);
                     imageWeapon1.sprite = other.gameObject.GetComponent<Weapon>().sprite;
                 }
                 else if (weaponInStuff[1] == null)
                 {
                     weaponInStuff[1] = other.gameObject;
+                    other.gameObject.SetActive(false);
                     imageWeapon2.sprite = other.gameObject.GetComponent<Weapon>().sprite;
                 }
             }
